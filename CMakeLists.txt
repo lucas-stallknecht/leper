@@ -7,9 +7,10 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 set(SRC_DIR "${ROOT_DIR}/src")
 set(THIRD_PARTY_DIR "${ROOT_DIR}/third_party")
+add_compile_definitions(SHADER_DIR="${CMAKE_SOURCE_DIR}/resources/shaders")
 
 # -- Leper --
-file(GLOB_RECURSE SRC_FILES "${SRC_DIR}/*.c??")
+file(GLOB_RECURSE SRC_FILES "${SRC_DIR}/*.c" "${SRC_DIR}/*.cpp")
 add_executable(leper ${SRC_FILES})
 
 # -- Dependencies --
