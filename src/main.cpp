@@ -6,9 +6,12 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include "asset_loading/obj_loading.h"
+#include "glm/fwd.hpp"
 #include "renderer/shader/shader.h"
 
 int main() {
+
     const uint32_t width = 900u;
     const uint32_t height = 900u;
 
@@ -17,7 +20,7 @@ int main() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    GLFWwindow* window = glfwCreateWindow(width, height, "Leper", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(width, height, "Leper", nullptr, nullptr);
     if (window == nullptr) {
         spdlog::error("Failed to create GLFW window");
         glfwTerminate();
@@ -32,49 +35,39 @@ int main() {
 
     glViewport(0, 0, width, height);
 
-    float vertices[] = {
-        -0.5f, -0.5f, 0.5f,
-        0.5f, -0.5f, 0.5f,
-        0.5f, 0.5f, 0.5f,
-        -0.5f, 0.5f, 0.5f,
-        -0.5f, -0.5f, -0.5f,
-        0.5f, -0.5f, -0.5f,
-        0.5f, 0.5f, -0.5f,
-        -0.5f, 0.5f, -0.5f};
-    uint32_t indices[] = {
-        0, 1, 2, 2, 3, 0, // Front face
-        1, 5, 6, 6, 2, 1, // Right face
-        5, 4, 7, 7, 6, 5, // Back face
-        4, 0, 3, 3, 7, 4, // Left face
-        3, 2, 6, 6, 7, 3, // Top face
-        4, 5, 1, 1, 0, 4  // Bottom face
-    };
-    ;
     GLuint VBO;
     glGenBuffers(1, &VBO);
 
     GLuint VAO;
     glGenVertexArrays(1, &VAO);
 
-    // 0. copy our vertices array in a buffer for OpenGL to use
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-    // 1. then set the vertex attributes pointers
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float_t), (void*)0);
-    glEnableVertexAttribArray(0);
 
-    GLuint EBO;
-    glGenBuffers(1, &EBO);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+    GLsizei vertex_count = 0;
+    auto cube_vertices = leper::load_obj_geometry("cube.obj");
+    if (!cube_vertices.has_value()) {
+        spdlog::error("Failed to load OBJ model");
+        return -1;
+    }
+    glBufferData(GL_ARRAY_BUFFER, cube_vertices.value().size() * sizeof(leper::Vertex), cube_vertices.value().data(), GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(leper::Vertex), (void*)offsetof(leper::Vertex, position));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(leper::Vertex), (void*)offsetof(leper::Vertex, normal));
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
+    vertex_count = static_cast<GLsizei>(cube_vertices.value().size());
 
     leper::Shader simple_shader("simple.vert.glsl", "simple.frag.glsl");
 
     // Transformations
     glm::mat4 trans = glm::mat4(1.0f);
-    trans = glm::scale(trans, glm::vec3(0.5, 0.5, 0.5));
+    trans = glm::scale(trans, glm::vec3(0.4f, 0.4f, 0.4f));
+    trans = glm::rotate(trans, glm::radians(45.f), glm::vec3(1.0, 1.0, 1.0));
 
+    // Light
+    glm::vec3 sun_dir = glm::vec3{0.5f, 1.0f, 0.3f};
+
+    glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
 
@@ -83,15 +76,14 @@ int main() {
         glfwPollEvents();
 
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         simple_shader.bind();
-        trans = glm::rotate(trans, glm::radians(1.5f), glm::vec3(0.0, 0.4, 1.0));
-        simple_shader.set_uniform_4m("transform", trans);
+        simple_shader.set_uniform_vec3f("sunDir", sun_dir);
+        simple_shader.set_uniform_mat4f("transform", trans);
 
         glBindVertexArray(VAO);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-        glDrawElements(GL_TRIANGLES, sizeof(indices), GL_UNSIGNED_INT, 0);
+        glDrawArrays(GL_TRIANGLES, 0, vertex_count);
     }
 
     glfwTerminate();

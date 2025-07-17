@@ -41,7 +41,7 @@ namespace leper {
         std::ifstream file(shader_file_path);
 
         if (!file.is_open()) {
-            spdlog::error("Faield to open shader file {}", shader_file_path.string());
+            spdlog::error("Failed to open shader file {}", shader_file_path.string());
         }
 
         std::stringstream shaderStream;
@@ -53,12 +53,12 @@ namespace leper {
     GLuint Shader::compile(const char* vertex_code, const char* fragment_code) {
 
         GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-        glShaderSource(vertex_shader, 1, &vertex_code, NULL);
+        glShaderSource(vertex_shader, 1, &vertex_code, nullptr);
         glCompileShader(vertex_shader);
         Shader::check_compilation_errors(vertex_shader, CompilationStepCheck::Vertex);
 
         GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(fragment_shader, 1, &fragment_code, NULL);
+        glShaderSource(fragment_shader, 1, &fragment_code, nullptr);
         glCompileShader(fragment_shader);
         Shader::check_compilation_errors(fragment_shader, CompilationStepCheck::Fragment);
 
@@ -79,7 +79,12 @@ namespace leper {
         glUseProgram(program_);
     }
 
-    void Shader::set_uniform_4m(const std::string& name, glm::mat4 m) {
+    void Shader::set_uniform_vec3f(const std::string& name, glm::vec3 v) {
+        uint32_t loc = glGetUniformLocation(program_, name.c_str());
+        glUniform3fv(loc, 1, glm::value_ptr(v));
+}
+
+    void Shader::set_uniform_mat4f(const std::string& name, glm::mat4 m) {
         // TODO: assert
         uint32_t loc = glGetUniformLocation(program_, name.c_str());
         glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(m));
