@@ -11,5 +11,5 @@ flat out vec3 vNorm;
 void main()
 {
     gl_Position = transform * vec4(aPos.x, aPos.y, aPos.z, 1.0);
-    vNorm = (transform * vec4(aNorm, 0.0)).xyz;
+    vNorm = aNorm;
 }
