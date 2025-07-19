@@ -1,5 +1,4 @@
-#ifndef OBJ_LOADING_H
-#define OBJ_LOADING_H
+#pragma once
 
 #include <cstdint>
 #include <optional>
@@ -19,5 +18,3 @@ namespace leper {
     std::optional<std::vector<Vertex>> load_obj_geometry(const std::string& file_name);
 
 } // namespace leper
-
-#endif // OBJ_LOADING_H

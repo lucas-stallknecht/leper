@@ -8,8 +8,9 @@
 #include <sys/stat.h>
 
 #include "asset_loading/obj_loading.h"
-#include "glm/ext/matrix_transform.hpp"
-#include "glm/fwd.hpp"
+#include "leper/leper_ecs_components.h"
+#include "leper/leper_ecs_types.h"
+#include "ecs/ecs.h"
 #include "renderer/shader/shader.h"
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
@@ -53,17 +54,27 @@ int main() {
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
 
     GLsizei vertex_count = 0;
-    auto cube_vertices = leper::load_obj_geometry("bunny.obj");
-    if (!cube_vertices.has_value()) {
+    auto test_vertiecs = leper::load_obj_geometry("bunny.obj");
+    if (!test_vertiecs.has_value()) {
         spdlog::error("Failed to load OBJ model");
         return -1;
     }
-    glBufferData(GL_ARRAY_BUFFER, cube_vertices.value().size() * sizeof(leper::Vertex), cube_vertices.value().data(), GL_STATIC_DRAW);
+
+    leper::ECS ecs;
+    ecs.register_component<leper::MeshComponent>();
+    leper::Entity bunny = ecs.create_entity();
+    ecs.add_component(bunny, leper::MeshComponent{
+                                 .vertices = test_vertiecs.value(),
+                                 .indices = {}});
+    auto vertices_from_ecs = ecs.get_component<leper::MeshComponent>(bunny);
+
+
+    glBufferData(GL_ARRAY_BUFFER, vertices_from_ecs.vertices.size() * sizeof(leper::Vertex), vertices_from_ecs.vertices.data(), GL_STATIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(leper::Vertex), (void*)offsetof(leper::Vertex, position));
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(leper::Vertex), (void*)offsetof(leper::Vertex, normal));
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
-    vertex_count = static_cast<GLsizei>(cube_vertices.value().size());
+    vertex_count = static_cast<GLsizei>(vertices_from_ecs.vertices.size());
 
     leper::Shader simple_shader("simple.vert.glsl", "simple.frag.glsl");
 
