@@ -15,6 +15,7 @@ namespace leper {
     };
 
     std::optional<FaceVertexTriplet> parseFaceTriplet(const std::string& token);
-    std::optional<std::vector<Vertex>> load_obj_geometry(const std::string& file_name);
+    std::vector<uint32_t> build_indices_from_vertices(const std::vector<Vertex>& vertices);
+    std::optional<Mesh> load_obj_mesh(const std::string& file_name);
 
 } // namespace leper

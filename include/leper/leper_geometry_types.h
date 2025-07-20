@@ -12,4 +12,9 @@ namespace leper {
         float_t uv_2;
     };
 
+    struct Mesh {
+        std::vector<Vertex> vertices;
+        std::vector<uint32_t> indices;
+    };
+
 } // namespace leper

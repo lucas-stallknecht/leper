@@ -11,6 +11,7 @@
 #include "leper/leper_ecs_components.h"
 #include "leper/leper_ecs_types.h"
 #include "ecs/ecs.h"
+#include "renderer/renderer.h"
 #include "renderer/shader/shader.h"
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
@@ -37,25 +38,12 @@ int main() {
         return -1;
     }
     glfwMakeContextCurrent(window);
-
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-        spdlog::error("Failed to initalize GLAD");
-        return -1;
-    }
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
-    GLuint vbo;
-    glGenBuffers(1, &vbo);
+    leper::Renderer renderer{};
 
-    GLuint vao;
-    glGenVertexArrays(1, &vao);
-
-    glBindVertexArray(vao);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-
-    GLsizei vertex_count = 0;
-    auto test_vertiecs = leper::load_obj_geometry("bunny.obj");
-    if (!test_vertiecs.has_value()) {
+    auto test_mesh = leper::load_obj_mesh("bunny.obj");
+    if (!test_mesh.has_value()) {
         spdlog::error("Failed to load OBJ model");
         return -1;
     }
@@ -63,19 +51,11 @@ int main() {
     leper::ECS ecs;
     ecs.register_component<leper::MeshComponent>();
     leper::Entity bunny = ecs.create_entity();
-    ecs.add_component(bunny, leper::MeshComponent{
-                                 .vertices = test_vertiecs.value(),
-                                 .indices = {}});
-    auto vertices_from_ecs = ecs.get_component<leper::MeshComponent>(bunny);
+    ecs.add_component(bunny, test_mesh.value());
 
+    auto mesh_from_ecs = ecs.get_component<leper::MeshComponent>(bunny);
 
-    glBufferData(GL_ARRAY_BUFFER, vertices_from_ecs.vertices.size() * sizeof(leper::Vertex), vertices_from_ecs.vertices.data(), GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(leper::Vertex), (void*)offsetof(leper::Vertex, position));
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(leper::Vertex), (void*)offsetof(leper::Vertex, normal));
-    glEnableVertexAttribArray(0);
-    glEnableVertexAttribArray(1);
-    vertex_count = static_cast<GLsizei>(vertices_from_ecs.vertices.size());
-
+    renderer.register_mesh(mesh_from_ecs);
     leper::Shader simple_shader("simple.vert.glsl", "simple.frag.glsl");
 
     // Transformations
@@ -131,10 +111,9 @@ int main() {
         glm::mat4 transform = projection * view * model;
         simple_shader.set_uniform_mat4f("transform", transform);
 
-        glBindVertexArray(vao);
-        glDrawArrays(GL_TRIANGLES, 0, vertex_count);
+        renderer.draw_mesh(mesh_from_ecs);
 
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glBlitFramebuffer(0, 0, downscaled_width, downscaled_height,
                           0, 0, width, height,
                           GL_COLOR_BUFFER_BIT,
@@ -143,8 +122,7 @@ int main() {
         glBindVertexArray(0);
         glBindBuffer(GL_FRAMEBUFFER, 0);
     }
-    glDeleteVertexArrays(1, &vao);
-    glDeleteBuffers(1, &vbo);
+    // glDeleteVertexArrays(1, &vao);
     glDeleteTextures(1, &color_tex);
     glDeleteFramebuffers(1, &fbo);
     // TODO: destroy shader

@@ -25,9 +25,13 @@ namespace leper {
         return out;
     }
 
+    std::vector<uint32_t> build_indices_from_vertices(const std::vector<Vertex>& vertices) {
+        return {};
+    }
+
     // S/o https://www.opengl-tutorial.org/beginners-tutorials/tutorial-7-model-loading/
     // for the tutorial
-    std::optional<std::vector<Vertex>> load_obj_geometry(const std::string& file_name) {
+    std::optional<Mesh> load_obj_mesh(const std::string& file_name) {
 
         std::filesystem::path shader_file_path = std::filesystem::path(ASSETS_DIR) / file_name;
         std::ifstream file(shader_file_path);
@@ -116,7 +120,9 @@ namespace leper {
             vertices.push_back(vertex);
         }
 
-        return vertices;
+        return Mesh{
+            .vertices = vertices,
+            .indices = build_indices_from_vertices(vertices)};
     }
 
 } // namespace leper
