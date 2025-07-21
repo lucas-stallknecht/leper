@@ -6,7 +6,7 @@
 
 #include <glm/glm.hpp>
 
-#include "leper/leper_geometry_types.h"
+#include "leper/leper_common_types.h"
 
 namespace leper {
 

@@ -6,7 +6,7 @@ uniform vec3 sunDir;
 
 out vec4 FragColor;
 
-#define N_COLORS 5.0
+#define N_COLORS 3.0
 
 void main()
 {

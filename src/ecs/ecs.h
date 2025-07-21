@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cstdint>
-#include <array>
 #include <queue>
 #include <unordered_map>
 #include <cassert>
@@ -14,71 +13,75 @@ namespace leper {
 
     class ECS {
       public:
-        ECS() {
-            for (Entity entity = 0; entity < MAX_ENTITIES; ++entity) {
-                available_entities_.push(entity);
-            }
-        }
+        ECS();
+        ~ECS();
 
         Entity create_entity();
         void destroy_entity(Entity entity);
 
         template <typename T>
         void register_component() {
-            std::type_index type_name = typeid(T);
-            assert(component_arrays_.find(type_name) == component_arrays_.end() && "Component already registered");
+            std::type_index type_id = typeid(T);
+            assert(component_arrays_.find(type_id) == component_arrays_.end() && "Component already registered");
 
-            component_arrays_[type_name] = new ComponentArray<T>();
-
-            Signature sig;
-            sig.set(component_type_signatures_.size());
-            component_type_signatures_[type_name] = sig;
+            component_arrays_[type_id] = new ComponentArray<T>();
         }
         // NOTE: We can't unregister components. Is is intended :)
 
         template <typename T>
         void add_component(Entity entity, T component) {
-            std::type_index type_name = typeid(T);
-            auto it = component_arrays_.find(type_name);
-            assert(it != component_arrays_.end() && "Component not registered");
+            std::type_index type_id = typeid(T);
+            auto target_array = component_arrays_.find(type_id);
+            assert(target_array != component_arrays_.end() && "Component not registered");
 
-            auto* comp_arr = static_cast<ComponentArray<T>*>(it->second);
-            comp_arr->insert_data(entity, component);
-
-            signatures_[entity] |= component_type_signatures_.at(type_name);
+            auto* comp_arr = static_cast<ComponentArray<T>*>(target_array->second);
+            comp_arr->insert(entity, component);
         }
 
         template <typename T>
         void remove_component(Entity entity) {
-            std::type_index type_name = typeid(T);
-            auto it = component_arrays_.find(type_name);
-            assert(it != component_arrays_.end() && "Component not registered");
+            std::type_index type_id = typeid(T);
+            auto target_array = component_arrays_.find(type_id);
+            assert(target_array != component_arrays_.end() && "Component not registered");
 
-            auto* comp_arr = static_cast<ComponentArray<T>*>(it->second);
-            comp_arr->remove_data(entity);
+            auto* comp_arr = static_cast<ComponentArray<T>*>(target_array->second);
+            comp_arr->remove(entity);
+        }
 
-            signatures_[entity] &= ~component_type_signatures_.at(type_name);
+        template <typename T>
+        bool has_component(Entity entity) const {
+            std::type_index type_id = typeid(T);
+            auto target_array = component_arrays_.find(type_id);
+            assert(target_array != component_arrays_.end() && "Component not registered");
+
+            auto* comp_arr = static_cast<ComponentArray<T>*>(target_array->second);
+            return comp_arr->has(entity);
         }
 
         template <typename T>
         T& get_component(Entity entity) {
-            std::type_index type_name = typeid(T);
-            auto it = component_arrays_.find(type_name);
-            assert(it != component_arrays_.end() && "Component not registered");
+            std::type_index type_id = typeid(T);
+            auto target_array = component_arrays_.find(type_id);
+            assert(target_array != component_arrays_.end() && "Component not registered");
 
-            auto* comp_arr = static_cast<ComponentArray<T>*>(it->second);
+            auto* comp_arr = static_cast<ComponentArray<T>*>(target_array->second);
             return comp_arr->get(entity);
         }
 
-        void clear();
+        template <typename T>
+        ComponentArray<T>* get_component_array() const {
+            std::type_index type_id = typeid(T);
+            auto target_array = component_arrays_.find(type_id);
+            assert(target_array != component_arrays_.end() && "Component not registered");
+
+            return static_cast<ComponentArray<T>*>(component_arrays_.at(type_id));
+        }
 
       private:
         std::queue<Entity> available_entities_;
-        std::array<Signature, MAX_ENTITIES> signatures_;
-        uint32_t living_entities_ = 0;
+        uint32_t active_entity_count_ = 0;
 
         std::unordered_map<std::type_index, IComponentArray*> component_arrays_;
-        std::unordered_map<std::type_index, Signature> component_type_signatures_;
     };
 
 } // namespace leper

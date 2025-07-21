@@ -122,7 +122,8 @@ namespace leper {
 
         return Mesh{
             .vertices = vertices,
-            .indices = build_indices_from_vertices(vertices)};
+            .indices = build_indices_from_vertices(vertices),
+            .name = file_name};
     }
 
 } // namespace leper

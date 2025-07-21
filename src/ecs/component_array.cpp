@@ -2,6 +2,4 @@
 
 
 namespace leper {
-
-
 }; // namespace leper

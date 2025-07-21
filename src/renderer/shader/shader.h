@@ -11,6 +11,7 @@ namespace leper {
         Vertex,
         Program,
     };
+
     inline const char* to_string(CompilationStepCheck step) {
         switch (step) {
         case CompilationStepCheck::Fragment:
@@ -38,12 +39,11 @@ namespace leper {
         void set_uniform_mat4f(const std::string& name, glm::mat4 m);
 
       private:
-        // TODO: extract these in a shader_utils file
         static void check_compilation_errors(GLuint shader, CompilationStepCheck step);
         static std::string read_shader_file(const std::string& file_name);
         GLuint compile(const char* vertCode, const char* fragCode);
 
-        GLuint program_;
+        GLuint program_ = 0;
     };
 
 } // namespace leper
