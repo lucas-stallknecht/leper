@@ -27,6 +27,35 @@ namespace leper {
         active_entity_count_--;
     }
 
+    void ECS::update_entity_signature(Entity entity, const Signature& new_signature) {
+        Signature old_signature = entity_signatures_[entity];
+
+        // Remove from old signature group
+        auto it = signature_to_entities_.find(old_signature);
+        if (it != signature_to_entities_.end()) {
+            it->second.erase(entity);
+
+            // No more entity left with these components
+            if (it->second.empty()) {
+                signature_to_entities_.erase(it);
+            }
+        }
+
+        // Set new signature
+        entity_signatures_[entity] = new_signature;
+        signature_to_entities_[new_signature].insert(entity);
+    }
+
+    std::vector<Entity> ECS::query_entities_with_signature(const Signature& required) const {
+        std::vector<Entity> result;
+        for (const auto& [sig, entities] : signature_to_entities_) {
+            if ((sig & required) == required) {
+                result.insert(result.end(), entities.begin(), entities.end());
+            }
+        }
+        return result;
+    }
+
     ECS::~ECS() {
         for (auto& [type, ptr] : component_arrays_) {
             delete ptr; // since only the ECS owns it

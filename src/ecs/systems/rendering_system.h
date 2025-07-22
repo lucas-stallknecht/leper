@@ -1,5 +1,18 @@
 #pragma once
 
+#include "../ecs.h"
+#include "../../renderer/renderer.h"
+
 namespace leper {
+
+    class RenderingSystem {
+      public:
+        RenderingSystem(ECS* ecs, Renderer* renderer);
+        void draw(uint16_t width, uint16_t height);
+
+      private:
+        ECS* ecs_;
+        Renderer* renderer_;
+    };
 
 }

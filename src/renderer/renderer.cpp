@@ -42,7 +42,7 @@ namespace leper {
         glBindBuffer(GL_FRAMEBUFFER, main_fbo_);
         glViewport(0, 0, MAIN_FRAME_WIDTH, MAIN_FRAME_HEIGHT);
 
-        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+        glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Move this in dedicated methods
