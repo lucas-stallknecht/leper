@@ -1,13 +1,12 @@
 #pragma once
 
 #include <cstdint>
-#include <typeindex>
 #include <unordered_map>
 
 #include "leper/leper_common_types.h"
-#include "leper/leper_material_to_shader_files.h"
 #include "leper/leper_rendering_types.h"
 #include "shader/shader.h"
+#include "shader/material_id_to_shader_files.h"
 
 namespace leper {
 
@@ -25,34 +24,35 @@ namespace leper {
 
         template <typename T>
         bool has_material_shader() {
-            return shaders_.find(typeid(T)) != shaders_.end();
+            return shaders_.find(get_material_id<T>()) != shaders_.end();
         }
 
         template <typename T>
         void create_shader() {
             assert(!has_material_shader<T>() && "Creating the same shader object twice");
-            const std::type_index material_index = typeid(T);
-            const std::pair<std::string, std::string> shader_names = MATERIAL_TO_SHADER_FILES.at(material_index);
-            shaders_.insert({material_index, Shader(shader_names.first, shader_names.second)});
+
+            const MaterialId material_id = get_material_id<T>();
+
+            const std::pair<std::string, std::string> shader_names = MATERIAL_TO_SHADER_FILES.at(material_id);
+            shaders_.insert({material_id, Shader(shader_names.first, shader_names.second)});
         }
 
         template <typename T>
         Shader* get_material_shader() {
 
             if (has_material_shader<T>()) {
-                return &shaders_.at(typeid(T));
+                return &shaders_.at(get_material_id<T>());
             }
             return nullptr;
         }
 
       private:
         std::unordered_map<std::string, MeshGlObjetcs> mesh_objects_;
-        std::unordered_map<std::type_index, Shader> shaders_;
+        std::unordered_map<MaterialId, Shader> shaders_;
 
         GLuint main_fbo_ = 0;
         GLuint color_tex_ = 0;
         GLuint depth_rbo_ = 0;
-
     };
 
 } // namespace leper

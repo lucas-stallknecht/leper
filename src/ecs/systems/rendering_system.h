@@ -11,8 +11,11 @@ namespace leper {
         void draw(uint16_t width, uint16_t height);
 
       private:
+        void setup_shaders();
+        void cleanup();
+
         ECS* ecs_;
         Renderer* renderer_;
     };
 
-}
+} // namespace leper

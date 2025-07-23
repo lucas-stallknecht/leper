@@ -23,14 +23,14 @@ namespace leper {
             glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
             if (!success) {
                 glGetShaderInfoLog(shader, 1024, nullptr, info_log);
-                spdlog::error("SHADER COMPILATION ERROR [{}]:\n{}\n-- --------------------------------------------------- --",
+                spdlog::error("SHADER COMPILATION ERROR [{}]:\n{}\n",
                               to_string(step), info_log);
             }
         } else {
             glGetProgramiv(shader, GL_LINK_STATUS, &success);
             if (!success) {
                 glGetProgramInfoLog(shader, 1024, nullptr, info_log);
-                spdlog::error("PROGRAM LINKING ERROR [{}]:\n{}\n-- --------------------------------------------------- --",
+                spdlog::error("PROGRAM LINKING ERROR [{}]:\n{}\n",
                               to_string(step), info_log);
             }
         }
@@ -82,10 +82,10 @@ namespace leper {
     void Shader::set_uniform_vec3f(const std::string& name, glm::vec3 v) {
         uint32_t loc = glGetUniformLocation(program_, name.c_str());
         glUniform3fv(loc, 1, glm::value_ptr(v));
-}
+    }
 
     void Shader::set_uniform_mat4f(const std::string& name, glm::mat4 m) {
-        // TODO: assert
+        // TODO: assert when uniform not found
         uint32_t loc = glGetUniformLocation(program_, name.c_str());
         glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(m));
     }

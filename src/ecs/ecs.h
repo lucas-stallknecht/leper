@@ -5,21 +5,14 @@
 #include <set>
 #include <unordered_map>
 #include <cassert>
-#include <typeindex>
 
 #include "leper/leper_ecs_types.h"
 #include "component_array.h"
+#include "../utils/id_utils.h"
 
 namespace leper {
 
     // --- Component IDs utils
-    static size_t component_id_counter = 0;
-
-    template <typename T>
-    size_t get_component_id() {
-        static size_t id = component_id_counter++;
-        return id;
-    }
     // ---
 
     class ECS {
@@ -32,7 +25,7 @@ namespace leper {
 
         template <typename T>
         void register_component() {
-            std::type_index type_id = typeid(T);
+            ComponentId type_id = get_component_id<T>();
             assert(component_arrays_.find(type_id) == component_arrays_.end() && "Component already registered");
 
             component_arrays_[type_id] = new ComponentArray<T>();
@@ -41,7 +34,7 @@ namespace leper {
 
         template <typename T>
         void add_component(Entity entity, T component) {
-            std::type_index type_id = typeid(T);
+            ComponentId type_id = get_component_id<T>();
             auto target_array = component_arrays_.find(type_id);
             assert(target_array != component_arrays_.end() && "Component not registered");
 
@@ -56,7 +49,7 @@ namespace leper {
 
         template <typename T>
         void remove_component(Entity entity) {
-            std::type_index type_id = typeid(T);
+            ComponentId type_id = get_component_id<T>();
             auto target_array = component_arrays_.find(type_id);
             assert(target_array != component_arrays_.end() && "Component not registered");
 
@@ -71,7 +64,7 @@ namespace leper {
 
         template <typename T>
         bool has_component(Entity entity) const {
-            std::type_index type_id = typeid(T);
+            ComponentId type_id = get_component_id<T>();
             auto target_array = component_arrays_.find(type_id);
             assert(target_array != component_arrays_.end() && "Component not registered");
 
@@ -81,7 +74,7 @@ namespace leper {
 
         template <typename T>
         T& get_component(Entity entity) {
-            std::type_index type_id = typeid(T);
+            ComponentId type_id = get_component_id<T>();
             auto target_array = component_arrays_.find(type_id);
             assert(target_array != component_arrays_.end() && "Component not registered");
 
@@ -91,7 +84,7 @@ namespace leper {
 
         template <typename T>
         ComponentArray<T>* get_component_array() const {
-            std::type_index type_id = typeid(T);
+            ComponentId type_id = get_component_id<T>();
             auto target_array = component_arrays_.find(type_id);
             assert(target_array != component_arrays_.end() && "Component not registered");
 
@@ -113,7 +106,7 @@ namespace leper {
         std::queue<Entity> available_entities_;
         uint32_t active_entity_count_ = 0;
 
-        std::unordered_map<std::type_index, IComponentArray*> component_arrays_;
+        std::unordered_map<ComponentId, IComponentArray*> component_arrays_;
 
         std::array<Signature, MAX_ENTITIES> entity_signatures_;
         std::unordered_map<Signature, std::set<Entity>> signature_to_entities_;
