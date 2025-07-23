@@ -24,6 +24,10 @@ int main() {
     const uint16_t width = 1280u;
     const uint16_t height = 720u;
 
+    float_t aspect = static_cast<float_t>(width) / static_cast<float>(height);
+    float_t ortho_height = 1.0f;
+    float_t ortho_width = ortho_height * aspect;
+
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
@@ -51,9 +55,20 @@ int main() {
         ecs.register_component<leper::MeshComponent>();
         ecs.register_component<leper::TransformComponent>();
         ecs.register_component<leper::BasicMaterialComponent>();
+        ecs.register_component<leper::CameraComponent>();
 
         leper::TransformSystem transform_sys(&ecs);
         leper::RenderingSystem rendering_sys(&ecs, &renderer);
+
+        leper::Entity camera = ecs.create_entity();
+        ecs.add_component<leper::CameraComponent>(camera, {
+              .view = glm::lookAt(glm::vec3(0.0f, 0.0f, 10.0f),
+                                  glm::vec3(0.0f, 0.0f, 0.0f),
+                                  glm::vec3(0.0f, 1.0f, 0.0f)),
+              .projection = glm::ortho(-ortho_width, ortho_width,
+                                       -ortho_height, ortho_height,
+                                       0.1f, 100.0f),
+        });
 
         leper::Entity bunny = ecs.create_entity();
         ecs.add_component<leper::MeshComponent>(bunny, test_mesh.value());
@@ -68,7 +83,7 @@ int main() {
 
             transform_sys.rotate_euler(bunny, {0.0f, 0.01f, 0.0f});
             transform_sys.update();
-            rendering_sys.draw(width, height);
+            rendering_sys.draw(width, height, camera);
         }
     }
 
