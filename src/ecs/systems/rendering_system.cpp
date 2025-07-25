@@ -38,6 +38,8 @@ namespace leper {
 
             const glm::mat4 model = ecs_->get_component<TransformComponent>(entity).model;
             basic_shader->set_uniform_mat4f("model", model);
+            const glm::vec3 albedo = ecs_->get_component<BasicMaterialComponent>(entity).albedo;
+            basic_shader->set_uniform_vec3f("u_color", albedo);
 
             renderer_->draw_mesh(mesh);
         }

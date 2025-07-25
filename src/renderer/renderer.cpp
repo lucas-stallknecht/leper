@@ -33,13 +33,17 @@ namespace leper {
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, color_tex_, 0);
         glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, depth_rbo_);
 
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+            spdlog::error("Framebuffer is not complete!");
+        }
+
         glBindTexture(GL_TEXTURE_2D, 0);
         glBindRenderbuffer(GL_RENDERBUFFER, 0);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
     void Renderer::start_frame() {
-        glBindBuffer(GL_FRAMEBUFFER, main_fbo_);
+        glBindFramebuffer(GL_FRAMEBUFFER, main_fbo_);
         glViewport(0, 0, MAIN_FRAME_WIDTH, MAIN_FRAME_HEIGHT);
 
         glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
@@ -51,12 +55,16 @@ namespace leper {
     }
 
     void Renderer::finish_frame(uint16_t width, uint16_t height) {
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        // Set default framebuffer to screen
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, main_fbo_);
+
         glBlitFramebuffer(0, 0, MAIN_FRAME_WIDTH, MAIN_FRAME_HEIGHT,
                           0, 0, width, height,
                           GL_COLOR_BUFFER_BIT,
                           GL_NEAREST);
-        glBindBuffer(GL_FRAMEBUFFER, 0);
+
+        glBindRenderbuffer(GL_RENDERBUFFER, 0);
     }
 
     bool Renderer::has_mesh_objects(const Mesh& mesh) {

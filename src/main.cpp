@@ -15,9 +15,9 @@
 #include "leper/leper_ecs_types.h"
 #include "renderer/renderer.h"
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
-    glViewport(0, 0, width, height);
-}
+// void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
+//     glViewport(0, 0, width, height);
+// }
 
 int main() {
 
@@ -40,12 +40,13 @@ int main() {
         return -1;
     }
     glfwMakeContextCurrent(window);
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    // glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
     {
-        auto test_mesh = leper::load_obj_mesh("bunny.obj");
-        if (!test_mesh.has_value()) {
-            spdlog::error("Failed to load OBJ model");
+        auto bunny_mesh = leper::load_obj_mesh("bunny.obj");
+        auto floor_mesh = leper::load_obj_mesh("floor.obj");
+        if (!bunny_mesh.has_value()) {
+            spdlog::error("Failed to load OBJ models");
             return -1;
         }
 
@@ -62,20 +63,28 @@ int main() {
 
         leper::Entity camera = ecs.create_entity();
         ecs.add_component<leper::CameraComponent>(camera, {
-              .view = glm::lookAt(glm::vec3(0.0f, 0.0f, 10.0f),
-                                  glm::vec3(0.0f, 0.0f, 0.0f),
-                                  glm::vec3(0.0f, 1.0f, 0.0f)),
-              .projection = glm::ortho(-ortho_width, ortho_width,
-                                       -ortho_height, ortho_height,
-                                       0.1f, 100.0f),
-        });
+                                                              .view = glm::lookAt(glm::vec3(0.0f, 1.0f, 3.0f),
+                                                                                  glm::vec3(0.0f, 0.2f, 0.0f),
+                                                                                  glm::vec3(0.0f, 1.0f, 0.0f)),
+                                                              .projection = glm::ortho(-ortho_width, ortho_width,
+                                                                                       -ortho_height, ortho_height,
+                                                                                       0.1f, 100.0f),
+                                                          });
 
         leper::Entity bunny = ecs.create_entity();
-        ecs.add_component<leper::MeshComponent>(bunny, test_mesh.value());
+        ecs.add_component<leper::MeshComponent>(bunny, bunny_mesh.value());
         ecs.add_component<leper::TransformComponent>(bunny, {});
-        ecs.add_component<leper::BasicMaterialComponent>(bunny, {});
+        ecs.add_component<leper::BasicMaterialComponent>(bunny, {.albedo = {0.831f, 0.624f, 0.329f}});
 
-        transform_sys.translate(bunny, {0.0f, -0.75f, 0.0f});
+        leper::Entity floor = ecs.create_entity();
+        ecs.add_component<leper::MeshComponent>(floor, floor_mesh.value());
+        ecs.add_component<leper::TransformComponent>(floor, {});
+        ecs.add_component<leper::BasicMaterialComponent>(floor, {.albedo = {0.549f, 0.82f, 0.447f}});
+
+        transform_sys.scale(bunny, {0.5f, 0.5f, 0.5f});
+        transform_sys.translate(bunny, {0.0f, 0.0f, 0.0f});
+
+        transform_sys.scale(floor, {5.0f, 5.0f, 5.0f});
 
         while (!glfwWindowShouldClose(window)) {
             glfwSwapBuffers(window);
@@ -83,7 +92,11 @@ int main() {
 
             transform_sys.rotate_euler(bunny, {0.0f, 0.01f, 0.0f});
             transform_sys.update();
-            rendering_sys.draw(width, height, camera);
+
+            int fb_width, fb_height;
+            glfwGetFramebufferSize(window, &fb_width, &fb_height);
+
+            rendering_sys.draw(fb_width, fb_height, camera);
         }
     }
 
