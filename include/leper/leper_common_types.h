@@ -33,4 +33,5 @@ namespace leper {
         glm::quat rotation = glm::identity<glm::quat>();
     };
 
+
 } // namespace leper
