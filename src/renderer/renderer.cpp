@@ -19,7 +19,7 @@ namespace leper {
         // Color texture
         glGenTextures(1, &color_tex_);
         glBindTexture(GL_TEXTURE_2D, color_tex_);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, MAIN_FRAME_WIDTH, MAIN_FRAME_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_SRGB8_ALPHA8, MAIN_FRAME_WIDTH, MAIN_FRAME_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -52,9 +52,11 @@ namespace leper {
         // Move this in dedicated methods
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_CULL_FACE);
+        glEnable(GL_FRAMEBUFFER_SRGB);
     }
 
     void Renderer::finish_frame(uint16_t width, uint16_t height) {
+
         // Set default framebuffer to screen
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
         glBindFramebuffer(GL_READ_FRAMEBUFFER, main_fbo_);

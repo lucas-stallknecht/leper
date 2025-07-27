@@ -76,12 +76,12 @@ int main() {
         leper::Entity bunny = ecs.create_entity();
         ecs.add_component<leper::MeshComponent>(bunny, bunny_mesh.value());
         ecs.add_component<leper::TransformComponent>(bunny, {});
-        ecs.add_component<leper::BasicMaterialComponent>(bunny, {.albedo = {0.831f, 0.624f, 0.329f}});
+        ecs.add_component<leper::BasicMaterialComponent>(bunny, {.albedo = {0.731f, 0.424f, 0.269f}});
 
         leper::Entity floor = ecs.create_entity();
         ecs.add_component<leper::MeshComponent>(floor, floor_mesh.value());
         ecs.add_component<leper::TransformComponent>(floor, {});
-        ecs.add_component<leper::BasicMaterialComponent>(floor, {.albedo = {0.6f, 0.6f, 0.6f}});
+        ecs.add_component<leper::BasicMaterialComponent>(floor, {.albedo = {0.05f, 0.05f, 0.05f}});
 
         transform_sys.scale(bunny, {0.5f, 0.5f, 0.5f});
         transform_sys.translate(bunny, {0.0f, 0.0f, 0.0f});
@@ -90,7 +90,7 @@ int main() {
 
         // Lights
         leper::Entity sun = ecs.create_entity();
-        ecs.add_component<leper::DirectionalLightComponent>(sun, {.color = {1.0f, 0.95f, 0.9f}, .intensity = 0.4f, .direction = {0.5f, 1.0f, 0.3f}});
+        ecs.add_component<leper::DirectionalLightComponent>(sun, {.color = {1.0f, 0.95f, 0.9f}, .intensity = 0.2f, .direction = {0.5f, 1.0f, 0.3f}});
 
         leper::Entity point_red = ecs.create_entity();
         ecs.add_component<leper::TransformComponent>(point_red, {});
