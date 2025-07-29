@@ -79,6 +79,12 @@ namespace leper {
         glUseProgram(program_);
     }
 
+
+    void Shader::set_uniform_1i(const std::string& name, int i) {
+        uint32_t loc = glGetUniformLocation(program_, name.c_str());
+        glUniform1i(loc, i);
+    }
+
     void Shader::set_uniform_1f(const std::string& name, float f) {
         uint32_t loc = glGetUniformLocation(program_, name.c_str());
         glUniform1f(loc, f);

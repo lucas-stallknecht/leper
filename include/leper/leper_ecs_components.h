@@ -8,7 +8,7 @@
 namespace leper {
 
     using MeshComponent = Mesh;
-    using BasicMaterialComponent = BasicMaterial;
+    using ToonMaterial = ToonMaterial;
 
     struct TransformComponent {
         Transform transform = {};

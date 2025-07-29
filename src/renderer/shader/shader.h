@@ -29,11 +29,9 @@ namespace leper {
       public:
         Shader(const std::string& vertex_shader_name, const std::string& fragment_shader_name);
         void bind();
-        /*
-            void unbind();
+        //   void unbind();
 
-            void set_uniform_1i(const std::string& name, int i);
-        */
+        void set_uniform_1i(const std::string& name, int i);
         void set_uniform_1f(const std::string& name, float f);
         void set_uniform_vec3f(const std::string& name, glm::vec3 v);
         void set_uniform_mat4f(const std::string& name, glm::mat4 m);

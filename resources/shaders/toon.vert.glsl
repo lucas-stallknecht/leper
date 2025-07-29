@@ -5,6 +5,7 @@ layout (location = 1) in vec3 aNorm;
 
 uniform mat4 projection;
 uniform mat4 view;
+uniform mat4 lightMatrix;
 
 struct Light {
     vec3 sunDir;
@@ -20,12 +21,15 @@ uniform Light light;
 
 uniform mat4 model;
 
-flat out vec3 vNorm;
-flat out vec3 vPos;
+out vec3 vNorm;
+out vec3 vPos;
+out vec4 vPosLightSpace;
+
 
 void main()
 {
-    gl_Position = projection * view * model * vec4(aPos.x, aPos.y, aPos.z, 1.0);
     vPos = vec3(model * vec4(aPos, 1.0));
+    gl_Position = projection * view * vec4(vPos, 1.0);
     vNorm = normalize(mat3(transpose(inverse(model))) * aNorm);
+    vPosLightSpace = lightMatrix * vec4(vPos, 1.0);
 }

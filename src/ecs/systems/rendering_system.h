@@ -13,6 +13,7 @@ namespace leper {
 
       private:
         void setup_shaders();
+        void draw_shadow_map_(const glm::mat4& light_matrix);
         void cleanup();
 
         ECS* ecs_;

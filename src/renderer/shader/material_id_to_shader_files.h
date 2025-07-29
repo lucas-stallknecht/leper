@@ -9,7 +9,7 @@
 namespace leper {
 
     const std::unordered_map<MaterialId, std::pair<std::string, std::string>> MATERIAL_TO_SHADER_FILES = {
-        {get_material_id<BasicMaterial>(), {"basic.vert.glsl", "basic.frag.glsl"}},
+        {get_material_id<ToonMaterial>(), {"toon.vert.glsl", "toon.frag.glsl"}},
     };
 
 }

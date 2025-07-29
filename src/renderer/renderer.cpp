@@ -1,6 +1,7 @@
 #include "renderer.h"
 
 #include <glad/glad.h>
+#include <memory>
 #include <spdlog/spdlog.h>
 #include <GLFW/glfw3.h>
 
@@ -12,26 +13,31 @@ namespace leper {
         if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
             spdlog::error("Failed to initalize GLAD");
         }
+        init_main_frame();
+        init_shadow_map();
+        depth_shader_ = std::make_unique<Shader>("depth.vert.glsl", "depth.frag.glsl");
+    }
 
+    void Renderer::init_main_frame() {
         glGenFramebuffers(1, &main_fbo_);
         glBindFramebuffer(GL_FRAMEBUFFER, main_fbo_);
 
-        // Color texture
-        glGenTextures(1, &color_tex_);
-        glBindTexture(GL_TEXTURE_2D, color_tex_);
+        // Color
+        glGenTextures(1, &main_texture_);
+        glBindTexture(GL_TEXTURE_2D, main_texture_);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_SRGB8_ALPHA8, MAIN_FRAME_WIDTH, MAIN_FRAME_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-        // Depth texture
-        glGenRenderbuffers(1, &depth_rbo_);
-        glBindRenderbuffer(GL_RENDERBUFFER, depth_rbo_);
+        // Depth
+        glGenRenderbuffers(1, &main_depth_rbo_);
+        glBindRenderbuffer(GL_RENDERBUFFER, main_depth_rbo_);
         glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, MAIN_FRAME_WIDTH, MAIN_FRAME_HEIGHT);
 
         // Attach
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, color_tex_, 0);
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, depth_rbo_);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, main_texture_, 0);
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, main_depth_rbo_);
 
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
             spdlog::error("Framebuffer is not complete!");
@@ -42,7 +48,42 @@ namespace leper {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
-    void Renderer::start_frame() {
+    void Renderer::init_shadow_map() {
+        glGenFramebuffers(1, &shadow_map_fbo_);
+
+        glGenTextures(1, &shadow_map_);
+        glBindTexture(GL_TEXTURE_2D, shadow_map_);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT,
+                     SHADOW_MAP_WIDTH, SHADOW_MAP_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, shadow_map_fbo_);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, shadow_map_, 0);
+        glDrawBuffer(GL_NONE);
+        glReadBuffer(GL_NONE);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+            spdlog::error("Shadow map framebuffer is not complete!");
+        }
+
+        glBindTexture(GL_TEXTURE_2D, 0);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
+
+    void Renderer::start_shadow_frame() {
+        glBindFramebuffer(GL_FRAMEBUFFER, shadow_map_fbo_);
+        glViewport(0, 0, SHADOW_MAP_WIDTH, SHADOW_MAP_HEIGHT);
+
+        glClear(GL_DEPTH_BUFFER_BIT);
+
+        glEnable(GL_DEPTH_TEST);
+    }
+
+    void Renderer::start_main_frame() {
         glBindFramebuffer(GL_FRAMEBUFFER, main_fbo_);
         glViewport(0, 0, MAIN_FRAME_WIDTH, MAIN_FRAME_HEIGHT);
 
@@ -53,10 +94,11 @@ namespace leper {
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_CULL_FACE);
         glEnable(GL_FRAMEBUFFER_SRGB);
+
+        glBindTexture(GL_TEXTURE_2D, shadow_map_);
     }
 
-    void Renderer::finish_frame(uint16_t width, uint16_t height) {
-
+    void Renderer::finish_main_frame(uint16_t width, uint16_t height) {
         // Set default framebuffer to screen
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
         glBindFramebuffer(GL_READ_FRAMEBUFFER, main_fbo_);
@@ -114,11 +156,18 @@ namespace leper {
         }
     }
 
+    Shader* Renderer::get_depth_shader() {
+        return depth_shader_.get();
+    }
+
     Renderer::~Renderer() {
 
-        glDeleteRenderbuffers(1, &depth_rbo_);
-        glDeleteTextures(1, &color_tex_);
+        glDeleteRenderbuffers(1, &main_depth_rbo_);
+        glDeleteTextures(1, &main_texture_);
         glDeleteFramebuffers(1, &main_fbo_);
+
+        glDeleteTextures(1, &shadow_map_);
+        glDeleteFramebuffers(1, &shadow_map_fbo_);
         // TODO: destroy all objects
     }
 

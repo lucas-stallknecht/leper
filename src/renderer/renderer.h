@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <memory>
 #include <unordered_map>
 
 #include "leper/leper_common_types.h"
@@ -15,8 +16,9 @@ namespace leper {
         Renderer();
         ~Renderer();
 
-        void start_frame();
-        void finish_frame(uint16_t width, uint16_t height);
+        void start_shadow_frame();
+        void start_main_frame();
+        void finish_main_frame(uint16_t width, uint16_t height);
 
         void upload_mesh(const Mesh& mesh);
         bool has_mesh_objects(const Mesh& mesh);
@@ -45,14 +47,22 @@ namespace leper {
             }
             return nullptr;
         }
+        Shader* get_depth_shader();
 
       private:
+        void init_main_frame();
+        void init_shadow_map();
+
         std::unordered_map<std::string, MeshGlObjetcs> mesh_objects_;
         std::unordered_map<MaterialId, Shader> shaders_;
 
         GLuint main_fbo_ = 0;
-        GLuint color_tex_ = 0;
-        GLuint depth_rbo_ = 0;
+        GLuint main_texture_ = 0;
+        GLuint main_depth_rbo_ = 0;
+
+        std::unique_ptr<Shader> depth_shader_;
+        GLuint shadow_map_fbo_ = 0;
+        GLuint shadow_map_ = 0;
     };
 
 } // namespace leper

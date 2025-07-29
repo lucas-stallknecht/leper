@@ -28,10 +28,16 @@ int main() {
     float_t ortho_height = 1.0f;
     float_t ortho_width = ortho_height * aspect;
 
+    // glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_X11);
     glfwInit();
+
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+    glfwSetErrorCallback([](int error, const char* description) {
+        fprintf(stderr, "GLFW Error %d: %s\n", error, description);
+    });
 
     GLFWwindow* window = glfwCreateWindow(width, height, "Leper", nullptr, nullptr);
     if (window == nullptr) {
@@ -43,9 +49,9 @@ int main() {
     // glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
     {
-        auto bunny_mesh = leper::load_obj_mesh("bunny.obj");
+        auto sphere_mesh = leper::load_obj_mesh("sphere.obj");
         auto floor_mesh = leper::load_obj_mesh("floor.obj");
-        if (!bunny_mesh.has_value()) {
+        if (!sphere_mesh.has_value()) {
             spdlog::error("Failed to load OBJ models");
             return -1;
         }
@@ -55,7 +61,7 @@ int main() {
         leper::ECS ecs;
         ecs.register_component<leper::MeshComponent>();
         ecs.register_component<leper::TransformComponent>();
-        ecs.register_component<leper::BasicMaterialComponent>();
+        ecs.register_component<leper::ToonMaterial>();
         ecs.register_component<leper::CameraComponent>();
         ecs.register_component<leper::DirectionalLightComponent>();
         ecs.register_component<leper::PointLightComponent>();
@@ -65,7 +71,7 @@ int main() {
 
         leper::Entity camera = ecs.create_entity();
         ecs.add_component<leper::CameraComponent>(camera, {
-                                                              .view = glm::lookAt(glm::vec3(0.0f, 1.0f, 3.0f),
+                                                              .view = glm::lookAt(glm::vec3(0.0f, 2.0f, 3.0f),
                                                                                   glm::vec3(0.0f, 0.2f, 0.0f),
                                                                                   glm::vec3(0.0f, 1.0f, 0.0f)),
                                                               .projection = glm::ortho(-ortho_width, ortho_width,
@@ -73,24 +79,24 @@ int main() {
                                                                                        0.1f, 100.0f),
                                                           });
 
-        leper::Entity bunny = ecs.create_entity();
-        ecs.add_component<leper::MeshComponent>(bunny, bunny_mesh.value());
-        ecs.add_component<leper::TransformComponent>(bunny, {});
-        ecs.add_component<leper::BasicMaterialComponent>(bunny, {.albedo = {0.731f, 0.424f, 0.269f}});
+        leper::Entity sphere = ecs.create_entity();
+        ecs.add_component<leper::MeshComponent>(sphere, sphere_mesh.value());
+        ecs.add_component<leper::TransformComponent>(sphere, {});
+        ecs.add_component<leper::ToonMaterial>(sphere, {.albedo = {0.28f, 0.6f, 0.96f}});
 
         leper::Entity floor = ecs.create_entity();
         ecs.add_component<leper::MeshComponent>(floor, floor_mesh.value());
         ecs.add_component<leper::TransformComponent>(floor, {});
-        ecs.add_component<leper::BasicMaterialComponent>(floor, {.albedo = {0.05f, 0.05f, 0.05f}});
+        ecs.add_component<leper::ToonMaterial>(floor, {.albedo = {0.25f, 0.25f, 0.25f}});
 
-        transform_sys.scale(bunny, {0.5f, 0.5f, 0.5f});
-        transform_sys.translate(bunny, {0.0f, 0.0f, 0.0f});
+        transform_sys.scale(sphere, {0.3f, 0.3f, 0.3f});
+        transform_sys.translate(sphere, {0.0f, 1.0f, 0.0f});
 
         transform_sys.scale(floor, {5.0f, 5.0f, 5.0f});
 
         // Lights
         leper::Entity sun = ecs.create_entity();
-        ecs.add_component<leper::DirectionalLightComponent>(sun, {.color = {1.0f, 0.95f, 0.9f}, .intensity = 0.2f, .direction = {0.5f, 1.0f, 0.3f}});
+        ecs.add_component<leper::DirectionalLightComponent>(sun, {.color = {1.0f, 0.95f, 0.9f}, .intensity = 0.6f, .direction = {0.4f, 1.0f, 0.1f}});
 
         leper::Entity point_red = ecs.create_entity();
         ecs.add_component<leper::TransformComponent>(point_red, {});
@@ -121,7 +127,7 @@ int main() {
             auto& blue_t = ecs.get_component<leper::TransformComponent>(point_green);
             blue_t.transform.position = {rot_radius * cos(theta + 4.188f), 1.0f, rot_radius * sin(theta + 4.188f)};
 
-            // transform_sys.rotate_euler(bunny, {0.0f, 0.01f, 0.0f});
+            // transform_sys.rotate_euler(sphere, {0.0f, 0.01f, 0.0f});
             transform_sys.update();
 
             int fb_width, fb_height;

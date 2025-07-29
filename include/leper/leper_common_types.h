@@ -23,7 +23,7 @@ namespace leper {
     };
 
     struct IMaterial {};
-    struct BasicMaterial : public IMaterial {
+    struct ToonMaterial : public IMaterial {
         glm::vec3 albedo = glm::vec3(1.0f, 1.0f, 1.0f);
     };
 
