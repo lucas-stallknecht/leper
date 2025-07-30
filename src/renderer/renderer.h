@@ -20,15 +20,14 @@ namespace leper {
         void start_main_frame();
         void finish_main_frame(uint16_t width, uint16_t height);
 
-        void upload_mesh(const Mesh& mesh);
         bool has_mesh_objects(const Mesh& mesh);
+        void upload_mesh(const Mesh& mesh);
         void draw_mesh(const Mesh& mesh);
 
         template <typename T>
         bool has_material_shader() {
             return shaders_.find(get_material_id<T>()) != shaders_.end();
         }
-
         template <typename T>
         void create_shader() {
             assert(!has_material_shader<T>() && "Creating the same shader object twice");
@@ -38,7 +37,6 @@ namespace leper {
             const std::pair<std::string, std::string> shader_names = MATERIAL_TO_SHADER_FILES.at(material_id);
             shaders_.insert({material_id, Shader(shader_names.first, shader_names.second)});
         }
-
         template <typename T>
         Shader* get_material_shader() {
 
@@ -48,6 +46,7 @@ namespace leper {
             return nullptr;
         }
         Shader* get_depth_shader();
+        void reload_shaders();
 
       private:
         void init_main_frame();

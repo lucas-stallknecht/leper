@@ -1,6 +1,5 @@
 #include "shader.h"
 
-#include <cstdint>
 #include <filesystem>
 #include <fstream>
 #include <glm/gtc/type_ptr.hpp>
@@ -8,7 +7,9 @@
 
 namespace leper {
 
-    Shader::Shader(const std::string& vertex_shader_name, const std::string& fragment_shader_name) {
+    Shader::Shader(const std::string& vertex_shader_name, const std::string& fragment_shader_name)
+        : vertex_shader_name_(vertex_shader_name), fragment_shader_name_(fragment_shader_name) {
+
         const std::string vertex_code = Shader::read_shader_file(vertex_shader_name);
         const std::string fragment_code = Shader::read_shader_file(fragment_shader_name);
 
@@ -23,14 +24,14 @@ namespace leper {
             glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
             if (!success) {
                 glGetShaderInfoLog(shader, 1024, nullptr, info_log);
-                spdlog::error("SHADER COMPILATION ERROR [{}]:\n{}\n",
+                spdlog::error("Shader Compilation Error [{}]:\n{}\n",
                               to_string(step), info_log);
             }
         } else {
             glGetProgramiv(shader, GL_LINK_STATUS, &success);
             if (!success) {
                 glGetProgramInfoLog(shader, 1024, nullptr, info_log);
-                spdlog::error("PROGRAM LINKING ERROR [{}]:\n{}\n",
+                spdlog::error("Program Link Error [{}]:\n{}\n",
                               to_string(step), info_log);
             }
         }
@@ -79,26 +80,53 @@ namespace leper {
         glUseProgram(program_);
     }
 
-
     void Shader::set_uniform_1i(const std::string& name, int i) {
-        uint32_t loc = glGetUniformLocation(program_, name.c_str());
+        int loc = glGetUniformLocation(program_, name.c_str());
+        if (loc == -1) {
+            spdlog::error("Uniform location not found: {}", name);
+        }
         glUniform1i(loc, i);
     }
 
     void Shader::set_uniform_1f(const std::string& name, float f) {
-        uint32_t loc = glGetUniformLocation(program_, name.c_str());
+        int loc = glGetUniformLocation(program_, name.c_str());
+        if (loc == -1) {
+            spdlog::error("Uniform location not found: {}", name);
+        }
         glUniform1f(loc, f);
     }
 
     void Shader::set_uniform_vec3f(const std::string& name, glm::vec3 v) {
-        uint32_t loc = glGetUniformLocation(program_, name.c_str());
+        int loc = glGetUniformLocation(program_, name.c_str());
+        if (loc == -1) {
+            spdlog::error("Uniform location not found: {}", name);
+        }
         glUniform3fv(loc, 1, glm::value_ptr(v));
     }
 
     void Shader::set_uniform_mat4f(const std::string& name, glm::mat4 m) {
-        // TODO: assert when uniform not found
-        uint32_t loc = glGetUniformLocation(program_, name.c_str());
+        int loc = glGetUniformLocation(program_, name.c_str());
+        if (loc == -1) {
+            spdlog::error("Uniform location not found: {}", name);
+        }
         glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(m));
+    }
+
+    void Shader::reload() {
+        const std::string vertex_code = Shader::read_shader_file(vertex_shader_name_);
+        const std::string fragment_code = Shader::read_shader_file(fragment_shader_name_);
+
+        program_ = compile(vertex_code.c_str(), fragment_code.c_str());
+
+        GLuint new_program = compile(vertex_code.c_str(), fragment_code.c_str());
+        if (new_program != 0) {
+            glDeleteProgram(program_);
+            program_ = new_program;
+        }
+    }
+
+    void Shader::cleanup() {
+        glDeleteProgram(program_);
     }
 
 } // namespace leper

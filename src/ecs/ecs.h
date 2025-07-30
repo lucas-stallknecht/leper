@@ -12,9 +12,6 @@
 
 namespace leper {
 
-    // --- Component IDs utils
-    // ---
-
     class ECS {
       public:
         ECS();

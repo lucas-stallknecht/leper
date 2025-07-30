@@ -8,6 +8,7 @@
 #include "leper/leper_ecs_types.h"
 
 namespace leper {
+
     // Used for typing only
     class IComponentArray {
       public:

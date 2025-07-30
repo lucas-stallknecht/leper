@@ -28,13 +28,16 @@ namespace leper {
     class Shader {
       public:
         Shader(const std::string& vertex_shader_name, const std::string& fragment_shader_name);
+
         void bind();
-        //   void unbind();
 
         void set_uniform_1i(const std::string& name, int i);
         void set_uniform_1f(const std::string& name, float f);
         void set_uniform_vec3f(const std::string& name, glm::vec3 v);
         void set_uniform_mat4f(const std::string& name, glm::mat4 m);
+
+        void reload();
+        void cleanup(); 
 
       private:
         static void check_compilation_errors(GLuint shader, CompilationStepCheck step);
@@ -42,6 +45,8 @@ namespace leper {
         GLuint compile(const char* vertCode, const char* fragCode);
 
         GLuint program_ = 0;
+        std::string vertex_shader_name_;
+        std::string fragment_shader_name_;
     };
 
 } // namespace leper

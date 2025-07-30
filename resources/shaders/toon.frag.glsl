@@ -88,9 +88,9 @@ void main()
     vec3 col = vec3(0.0);
     col += 0.3 * u_color;
     col += calcDirLight(dirLight, vNorm, viewDir);
-    // for(int i = 0; i < MAX_POINT_LIGHTS; i++) {
-    //     col += calcPointLight(pointLights[i], vPos, vNorm);
-    // }
+    for(int i = 0; i < MAX_POINT_LIGHTS; i++) {
+        col += calcPointLight(pointLights[i], vPos, vNorm);
+    }
 
     FragColor = vec4(col, 1.0);
 } 

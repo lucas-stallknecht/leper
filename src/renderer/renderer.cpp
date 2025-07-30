@@ -160,6 +160,12 @@ namespace leper {
         return depth_shader_.get();
     }
 
+    void Renderer::reload_shaders() {
+        for (auto& shader_pair : shaders_) {
+            shader_pair.second.reload();
+        }
+    }
+
     Renderer::~Renderer() {
 
         glDeleteRenderbuffers(1, &main_depth_rbo_);
@@ -168,7 +174,15 @@ namespace leper {
 
         glDeleteTextures(1, &shadow_map_);
         glDeleteFramebuffers(1, &shadow_map_fbo_);
-        // TODO: destroy all objects
+
+        for (auto& shader_pair : shaders_) {
+            shader_pair.second.cleanup();
+        }
+
+        for (auto& mesh_pair : mesh_objects_) {
+            glDeleteVertexArrays(1, &mesh_pair.second.vao);
+            glDeleteBuffers(1, &mesh_pair.second.ebo);
+        }
     }
 
 } // namespace leper

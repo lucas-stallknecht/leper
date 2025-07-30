@@ -58,6 +58,18 @@ int main() {
 
         leper::Renderer renderer{};
 
+        glfwSetWindowUserPointer(window, &renderer);
+        glfwSetKeyCallback(window, [](GLFWwindow* window, int key, int scancode, int action, int mods) {
+            auto self = static_cast<leper::Renderer*>(glfwGetWindowUserPointer(window));
+            if (key == GLFW_KEY_R && action == GLFW_PRESS) {
+                auto renderer_ptr = static_cast<leper::Renderer*>(glfwGetWindowUserPointer(window));
+                if (renderer_ptr) {
+                    spdlog::info("Reloading shaders...");
+                    renderer_ptr->reload_shaders();
+                }
+            }
+        });
+
         leper::ECS ecs;
         ecs.register_component<leper::MeshComponent>();
         ecs.register_component<leper::TransformComponent>();
@@ -100,15 +112,15 @@ int main() {
 
         leper::Entity point_red = ecs.create_entity();
         ecs.add_component<leper::TransformComponent>(point_red, {});
-        ecs.add_component<leper::PointLightComponent>(point_red, {.color = {1.0f, 0.0f, 0.0f}, .intensity = 1.0f});
+        ecs.add_component<leper::PointLightComponent>(point_red, {.color = {1.0f, 0.0f, 0.0f}, .intensity = 2.0f});
 
         leper::Entity point_green = ecs.create_entity();
         ecs.add_component<leper::TransformComponent>(point_green, {});
-        ecs.add_component<leper::PointLightComponent>(point_green, {.color = {0.0f, 1.0f, 0.0f}, .intensity = 1.0f});
+        ecs.add_component<leper::PointLightComponent>(point_green, {.color = {0.0f, 1.0f, 0.0f}, .intensity = 2.0f});
 
         leper::Entity point_blue = ecs.create_entity();
         ecs.add_component<leper::TransformComponent>(point_blue, {});
-        ecs.add_component<leper::PointLightComponent>(point_blue, {.color = {0.0f, 0.0f, 1.0f}, .intensity = 1.0f});
+        ecs.add_component<leper::PointLightComponent>(point_blue, {.color = {0.0f, 0.0f, 1.0f}, .intensity = 2.0f});
 
         const float_t rot_radius = 1.25f;
         const float_t rot_speed = 0.01f;
