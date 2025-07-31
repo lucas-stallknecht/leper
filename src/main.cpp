@@ -15,9 +15,19 @@
 #include "leper/leper_ecs_types.h"
 #include "renderer/renderer.h"
 
-// void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
-//     glViewport(0, 0, width, height);
-// }
+#define MAX_TRAIL_POINTS 64
+
+void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
+    spdlog::info("{}, {}", width, height);
+}
+
+std::vector<glm::vec2> trailPoints;
+
+void cursor_callback(GLFWwindow* window, double xpos, double ypos) {
+    trailPoints.push_back(glm::vec2(xpos, ypos));
+    if (trailPoints.size() > MAX_TRAIL_POINTS)
+        trailPoints.erase(trailPoints.begin());
+}
 
 int main() {
 
@@ -28,7 +38,7 @@ int main() {
     float_t ortho_height = 1.0f;
     float_t ortho_width = ortho_height * aspect;
 
-    // glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_X11);
+    glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_X11);
     glfwInit();
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -46,7 +56,9 @@ int main() {
         return -1;
     }
     glfwMakeContextCurrent(window);
-    // glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+
+    glfwSetCursorPosCallback(window, cursor_callback);
 
     {
         auto sphere_mesh = leper::load_obj_mesh("sphere.obj");
@@ -145,7 +157,7 @@ int main() {
             int fb_width, fb_height;
             glfwGetFramebufferSize(window, &fb_width, &fb_height);
 
-            rendering_sys.draw(fb_width, fb_height, camera);
+            rendering_sys.draw(fb_width, fb_height, camera, trailPoints);
 
             transform_sys.translate(point_red, {0.0f, 1.0f, -1.25f});
 

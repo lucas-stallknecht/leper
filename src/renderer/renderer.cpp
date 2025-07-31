@@ -15,7 +15,9 @@ namespace leper {
         }
         init_main_frame();
         init_shadow_map();
+        init_trail();
         depth_shader_ = std::make_unique<Shader>("depth.vert.glsl", "depth.frag.glsl");
+        trail_shader_ = std::make_unique<Shader>("trail.vert.glsl", "trail.frag.glsl");
     }
 
     void Renderer::init_main_frame() {
@@ -72,6 +74,21 @@ namespace leper {
 
         glBindTexture(GL_TEXTURE_2D, 0);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
+
+    void Renderer::init_trail() {
+        glGenVertexArrays(1, &trail_vao_);
+        glGenBuffers(1, &trail_vbo_);
+
+        glBindVertexArray(trail_vao_);
+        glBindBuffer(GL_ARRAY_BUFFER, trail_vbo_);
+        glBufferData(GL_ARRAY_BUFFER, 64 * sizeof(glm::vec2), nullptr, GL_DYNAMIC_DRAW); // allocate space
+
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2), (void*)0);
+        glEnableVertexAttribArray(0);
+
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindVertexArray(0);
     }
 
     void Renderer::start_shadow_frame() {
@@ -166,8 +183,24 @@ namespace leper {
         }
     }
 
-    Renderer::~Renderer() {
+    void Renderer::draw_trail(uint16_t width, uint16_t height,const std::vector<glm::vec2>& trailPoints) {
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glViewport(0, 0, width, height);
+        glDisable(GL_DEPTH_TEST);
 
+        glLineWidth(5.0f);
+
+        trail_shader_->bind();
+        glBindVertexArray(trail_vao_);
+        glBindBuffer(GL_ARRAY_BUFFER, trail_vbo_);
+
+        glBufferSubData(GL_ARRAY_BUFFER, 0, trailPoints.size() * sizeof(glm::vec2), trailPoints.data());
+        glDrawArrays(GL_LINE_STRIP, 0, trailPoints.size());
+
+        glBindVertexArray(0);
+    }
+
+    Renderer::~Renderer() {
         glDeleteRenderbuffers(1, &main_depth_rbo_);
         glDeleteTextures(1, &main_texture_);
         glDeleteFramebuffers(1, &main_fbo_);
@@ -178,6 +211,7 @@ namespace leper {
         for (auto& shader_pair : shaders_) {
             shader_pair.second.cleanup();
         }
+        depth_shader_->cleanup();
 
         for (auto& mesh_pair : mesh_objects_) {
             glDeleteVertexArrays(1, &mesh_pair.second.vao);

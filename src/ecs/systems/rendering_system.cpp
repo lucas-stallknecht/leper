@@ -16,6 +16,12 @@ glm::vec3 srgb_to_linear(glm::vec3 c) {
         pow(c.b, 2.2f));
 }
 
+glm::vec2 screen_to_ndc(double x, double y, uint16_t width, uint16_t height) {
+    return glm::vec2(
+        (x / width) * 2.0 - 1.0,
+        1.0 - (y / height) * 2.0);
+}
+
 namespace leper {
 
     RenderingSystem::RenderingSystem(ECS* ecs, Renderer* renderer) : ecs_(ecs), renderer_(renderer) {
@@ -48,7 +54,8 @@ namespace leper {
         }
     }
 
-    void RenderingSystem::draw(uint16_t width, uint16_t height, Entity camera) {
+    void RenderingSystem::draw(uint16_t width, uint16_t height, Entity camera,
+                               const std::vector<glm::vec2>& trailPoints) {
 
         ComponentArray<DirectionalLightComponent>* dir_lights_array = ecs_->get_component_array<DirectionalLightComponent>();
         glm::mat4 light_matrix = glm::identity<glm::mat4>();
@@ -123,7 +130,15 @@ namespace leper {
             renderer_->draw_mesh(mesh);
         }
 
+        std::vector<glm::vec2> transformed_trail_points = {};
+        for (const auto& point : trailPoints) {
+            transformed_trail_points.push_back(screen_to_ndc(
+                point.x, point.y, width, height));
+        }
+
         renderer_->finish_main_frame(width, height);
+
+        renderer_->draw_trail(width, height, transformed_trail_points);
     }
 
 } // namespace leper

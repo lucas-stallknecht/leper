@@ -9,7 +9,8 @@ namespace leper {
     class RenderingSystem {
       public:
         RenderingSystem(ECS* ecs, Renderer* renderer);
-        void draw(uint16_t width, uint16_t height, Entity camera);
+        void draw(uint16_t width, uint16_t height, Entity camera,
+                  const std::vector<glm::vec2>& trailPoints);
 
       private:
         void setup_shaders();

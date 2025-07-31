@@ -48,9 +48,12 @@ namespace leper {
         Shader* get_depth_shader();
         void reload_shaders();
 
+        void draw_trail(uint16_t width, uint16_t height, const std::vector<glm::vec2>& trailPoints);
+
       private:
         void init_main_frame();
         void init_shadow_map();
+        void init_trail();
 
         std::unordered_map<std::string, MeshGlObjetcs> mesh_objects_;
         std::unordered_map<MaterialId, Shader> shaders_;
@@ -62,6 +65,10 @@ namespace leper {
         std::unique_ptr<Shader> depth_shader_;
         GLuint shadow_map_fbo_ = 0;
         GLuint shadow_map_ = 0;
+
+        std::unique_ptr<Shader> trail_shader_;
+        GLuint trail_vao_ = 0;
+        GLuint trail_vbo_ = 0;
     };
 
 } // namespace leper
